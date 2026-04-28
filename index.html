@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LEM◈RA Trading Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0c10;--surface:#111318;--surface2:#181c24;--border:#1e2330;
+    --green:#00e676;--green-dim:rgba(0,230,118,.09);
+    --red:#ff3d57;--red-dim:rgba(255,61,87,.09);
+    --yellow:#ffd600;--yellow-dim:rgba(255,214,0,.09);
+    --blue:#448aff;--blue-dim:rgba(68,138,255,.09);
+    --purple:#b388ff;--purple-dim:rgba(179,136,255,.09);
+    --orange:#ff6d00;--cyan:#00e5ff;--cyan-dim:rgba(0,229,255,.09);
+    --text:#eef0f6;--text-dim:#4b5563;--text-mid:#9ca3af;
+    --mono:'Space Mono',monospace;--sans:'Syne',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;min-height:100vh;}
+
+  /* TOPBAR */
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:58px;position:sticky;top:0;z-index:200;overflow:visible;}
+  .logo-wrap{display:flex;flex-direction:column;gap:2px;}
+  .logo{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--green);letter-spacing:3px;display:flex;align-items:center;gap:12px;}
+  .logo-sub{font-family:var(--mono);font-size:12px;color:var(--text-dim);letter-spacing:2px;border-left:1px solid var(--border);padding-left:12px;}
+  .logo-date{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;padding-left:2px;}
+  .topbar-center{display:flex;align-items:center;gap:8px;}
+  .topbar-right{display:flex;align-items:center;gap:8px;}
+  .menu-btn{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:5px 12px;font-family:var(--mono);font-size:10px;color:var(--text-dim);cursor:pointer;letter-spacing:1px;transition:all .15s;}
+  .menu-btn:hover,.menu-btn.on{border-color:var(--green);color:var(--green);background:var(--green-dim);}
+  .price-pill{display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;transition:border-color .15s;}
+  .price-pill:hover{border-color:var(--green);}
+  .price-pill .pl{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;}
+  .price-pill .pv{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--text);background:transparent;border:none;outline:none;width:68px;text-align:right;}
+  .price-pill .pv:focus{color:var(--green);}
+  .pv-vix{color:var(--yellow)!important;}
+  .pulse{display:inline-block;width:8px;height:8px;background:var(--green);border-radius:50%;animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,230,118,.4);}50%{box-shadow:0 0 0 6px rgba(0,230,118,0);}}
+
+  /* MODE SELECTOR */
+  .mode-wrap{display:flex;align-items:center;gap:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  .mode-btn{font-family:var(--mono);font-size:10px;letter-spacing:1px;padding:8px 14px;cursor:pointer;color:var(--text-dim);transition:all .15s;border:none;background:transparent;white-space:nowrap;}
+  .mode-btn:hover{color:var(--text-mid);}
+  .mode-btn.active[data-mode="premarket"]{background:var(--yellow-dim);color:var(--yellow);}
+  .mode-btn.active[data-mode="daily"]{background:var(--green-dim);color:var(--green);}
+  .mode-btn.active[data-mode="intraday"]{background:var(--cyan-dim);color:var(--cyan);}
+  .mode-btn.active[data-mode="postclose"]{background:var(--purple-dim);color:var(--purple);}
+  .mode-divider{width:1px;height:20px;background:var(--border);}
+
+  /* TABS */
+  .tabs-bar{background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:2px;}
+  .tab{font-family:var(--mono);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);padding:13px 16px;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
+  .tab:hover{color:var(--text-mid);}
+  .tab.active{color:var(--green);border-bottom-color:var(--green);}
+
+  /* PAGE */
+  .page{display:none;max-width:1400px;margin:0 auto;padding:20px 24px;}
+  .page.visible{display:block;}
+
+  /* CARDS */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 24px;margin-bottom:18px;}
+  .section-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;cursor:pointer;}
+  .section-num{font-family:var(--mono);font-size:10px;color:var(--green);background:var(--green-dim);border:1px solid var(--green);border-radius:3px;padding:2px 8px;letter-spacing:1px;}
+  .section-title{font-family:var(--sans);font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;}
+  .section-ts{font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-left:auto;}
+  .collapse-arrow{font-size:11px;color:var(--text-dim);margin-left:8px;transition:transform .2s;}
+  .collapsed-section .collapse-arrow{transform:rotate(-90deg);}
+  .collapsible-body{overflow:hidden;transition:max-height .3s ease,opacity .3s ease;}
+  .collapsed-section .collapsible-body{max-height:0!important;opacity:0;pointer-events:none;}
+
+  /* PORTFOLIO */
+  .port-wrapper{overflow:hidden;transition:max-height .3s ease,opacity .3s ease;max-height:160px;opacity:1;}
+  .port-wrapper.collapsed{max-height:0;opacity:0;pointer-events:none;}
+  .port-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+  .port-item{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;}
+  .port-item .p-num{font-family:var(--mono);font-size:22px;font-weight:700;margin-bottom:5px;}
+  .port-item .p-label{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;}
+
+  /* MODE PANELS */
+  .mode-panel{display:none;}
+  .mode-panel.visible{display:block;}
+
+  /* ACTION TABLES */
+  .action-hero{background:linear-gradient(135deg,#0c1220,#111318);border:1px solid var(--green);border-radius:12px;padding:22px;position:relative;overflow:hidden;margin-bottom:18px;}
+  .action-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--green),transparent);}
+  .action-tactical{background:linear-gradient(135deg,#120c20,#111318);border:1px solid var(--purple);border-radius:12px;padding:22px;position:relative;overflow:hidden;margin-bottom:18px;}
+  .action-tactical::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--purple),transparent);}
+  .action-intraday{background:linear-gradient(135deg,#001a20,#111318);border:1px solid var(--cyan);border-radius:12px;padding:22px;position:relative;overflow:hidden;margin-bottom:18px;}
+  .action-intraday::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cyan),transparent);}
+  .action-premarket{background:linear-gradient(135deg,#1a1400,#111318);border:1px solid var(--yellow);border-radius:12px;padding:22px;position:relative;overflow:hidden;margin-bottom:18px;}
+  .action-premarket::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--yellow),transparent);}
+  .action-postclose{background:linear-gradient(135deg,#12001a,#111318);border:1px solid var(--purple);border-radius:12px;padding:22px;position:relative;overflow:hidden;margin-bottom:18px;}
+  .action-postclose::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--purple),transparent);}
+  .hero-title{font-family:var(--mono);font-size:11px;letter-spacing:3px;text-transform:uppercase;margin-bottom:16px;}
+
+  /* TABLES */
+  table{width:100%;border-collapse:collapse;font-family:var(--mono);}
+  thead tr{border-bottom:1px solid var(--border);}
+  th{text-align:left;padding:8px 10px;font-size:10px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;font-weight:400;}
+  td{padding:11px 10px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:var(--surface2);}
+
+  /* BADGES */
+  .badge{display:inline-flex;align-items:center;gap:4px;border-radius:4px;padding:4px 10px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;font-family:var(--mono);}
+  .badge-enter{background:var(--green-dim);border:1px solid var(--green);color:var(--green);}
+  .badge-wait{background:var(--yellow-dim);border:1px solid var(--yellow);color:var(--yellow);}
+  .badge-skip{background:var(--red-dim);border:1px solid var(--red);color:var(--red);}
+  .badge-optional{background:var(--blue-dim);border:1px solid var(--blue);color:var(--blue);}
+  .badge-tactical{background:var(--purple-dim);border:1px solid var(--purple);color:var(--purple);}
+  .badge-hold{background:var(--cyan-dim);border:1px solid var(--cyan);color:var(--cyan);}
+  .badge-exit{background:var(--red-dim);border:1px solid var(--red);color:var(--red);}
+  .badge-trim{background:var(--yellow-dim);border:1px solid var(--yellow);color:var(--yellow);}
+  .badge-valid{background:var(--green-dim);border:1px solid var(--green);color:var(--green);}
+  .badge-invalid{background:var(--red-dim);border:1px solid var(--red);color:var(--red);}
+
+  .ticker{font-family:var(--mono);font-size:14px;font-weight:700;}
+  .ticker-price{font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:2px;}
+  .price-up{color:var(--green);} .price-down{color:var(--red);}
+  .stop-val{font-family:var(--mono);font-size:12px;color:var(--red);font-weight:700;}
+  .target-val{font-family:var(--mono);font-size:12px;color:var(--green);font-weight:700;}
+  .entry-val{font-family:var(--mono);font-size:11px;color:var(--text-mid);line-height:1.6;}
+  .contracts{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--blue);}
+  .webull-alert{display:inline-flex;align-items:center;gap:4px;background:#1a1200;border:1px solid var(--yellow);border-radius:3px;padding:3px 8px;font-size:10px;color:var(--yellow);font-family:var(--mono);}
+  .structure-sw{font-family:var(--mono);font-size:10px;color:var(--blue);background:var(--blue-dim);border:1px solid var(--blue);border-radius:3px;padding:2px 7px;white-space:nowrap;}
+  .structure-tc{font-family:var(--mono);font-size:10px;color:var(--purple);background:var(--purple-dim);border:1px solid var(--purple);border-radius:3px;padding:2px 7px;white-space:nowrap;}
+  .row-skip td{opacity:.35;}
+  .exec-check{width:18px;height:18px;accent-color:var(--green);cursor:pointer;}
+  .rule-alert{background:#1a0f00;border:1px solid var(--orange);border-radius:6px;padding:10px 14px;display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:#ff9800;margin-top:12px;}
+
+  /* DTE LEGEND */
+  .dte-legend{display:flex;gap:14px;margin-bottom:14px;}
+  .dte-pill{display:flex;align-items:center;gap:5px;padding:4px 12px;border-radius:5px;font-family:var(--mono);font-size:10px;}
+  .dte-swing{background:var(--blue-dim);border:1px solid var(--blue);color:var(--blue);}
+  .dte-tactical{background:var(--purple-dim);border:1px solid var(--purple);color:var(--purple);}
+
+  /* 2 COL */
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+
+  /* REGIME */
+  .regime-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+  .regime-item{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:11px 13px;}
+  .regime-item .r-label{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+  .regime-item .r-value{font-family:var(--sans);font-size:13px;font-weight:600;}
+
+  /* SECTOR */
+  .sector-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+  .sector-row:last-child{border-bottom:none;}
+  .sector-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .s-green{background:var(--green);box-shadow:0 0 6px var(--green);}
+  .s-red{background:var(--red);box-shadow:0 0 6px var(--red);}
+  .sector-name{font-family:var(--sans);font-size:13px;font-weight:600;min-width:175px;}
+  .sector-reason{font-family:var(--mono);font-size:11px;color:var(--text-dim);flex:1;}
+  .sector-tag{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;}
+  .tag-fresh{background:var(--green-dim);color:var(--green);border:1px solid var(--green);}
+  .tag-weak{background:var(--red-dim);color:var(--red);border:1px solid var(--red);}
+
+  /* NEWS collapsible */
+  .news-toggle-btn{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 14px;font-family:var(--mono);font-size:10px;color:var(--text-dim);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px;}
+  .news-toggle-btn:hover,.news-toggle-btn.open{border-color:var(--green);color:var(--green);background:var(--green-dim);}
+  .news-panel{display:none;margin-top:14px;}
+  .news-panel.open{display:block;}
+  .news-item{display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);}
+  .news-item:last-child{border-bottom:none;}
+  .news-rank{font-family:var(--mono);font-size:11px;color:var(--text-dim);min-width:26px;}
+  .news-content{flex:1;}
+  .news-headline{font-family:var(--sans);font-size:13px;font-weight:600;margin-bottom:4px;}
+  .news-headline a{color:var(--text);text-decoration:none;}
+  .news-headline a:hover{color:var(--green);}
+  .news-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .news-source{font-family:var(--mono);font-size:10px;color:var(--text-dim);}
+  .news-impact{font-family:var(--mono);font-size:10px;padding:1px 7px;border-radius:3px;}
+  .impact-high{background:var(--red-dim);color:var(--red);border:1px solid var(--red);}
+  .impact-med{background:var(--yellow-dim);color:var(--yellow);border:1px solid var(--yellow);}
+  .impact-low{background:var(--green-dim);color:var(--green);border:1px solid var(--green);}
+  .news-tickers{font-family:var(--mono);font-size:10px;color:var(--blue);}
+  .news-impl{font-family:var(--mono);font-size:10px;color:var(--text-dim);font-style:italic;}
+
+  /* INTRADAY */
+  .valid-badge{font-family:var(--mono);font-size:11px;font-weight:700;}
+  .intraday-note{font-family:var(--mono);font-size:11px;color:var(--text-mid);}
+
+  /* PRE/POST panels */
+  .overnight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px;}
+  .overnight-item{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;}
+  .overnight-item .o-label{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+  .overnight-item .o-value{font-family:var(--sans);font-size:14px;font-weight:700;}
+  .summary-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+  .summary-item:last-child{border-bottom:none;}
+  .s-label{font-family:var(--mono);font-size:11px;color:var(--text-dim);min-width:160px;}
+  .s-value{font-family:var(--sans);font-size:13px;font-weight:600;}
+
+  /* JOURNAL */
+  .journal-entry{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:12px;}
+  .je-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+  .je-ticker{font-family:var(--mono);font-size:17px;font-weight:700;}
+  .je-time{font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-left:auto;}
+  .je-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px;}
+  .je-label{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;}
+  .je-value{font-family:var(--mono);font-size:13px;font-weight:700;}
+  .je-actions{display:flex;gap:8px;}
+
+  /* REPORT SLOTS */
+  .report-slots{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+  .report-slot{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px;min-height:150px;position:relative;transition:border-color .15s;}
+  .report-slot.has-data{border-color:var(--green);}
+  .slot-label{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+  .slot-title{font-family:var(--sans);font-size:14px;font-weight:700;margin-bottom:6px;}
+  .slot-empty{font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:16px;text-align:center;}
+  .slot-add-btn{position:absolute;bottom:12px;right:12px;background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:4px 10px;font-family:var(--mono);font-size:10px;color:var(--text-dim);cursor:pointer;transition:all .15s;}
+  .slot-add-btn:hover{border-color:var(--green);color:var(--green);}
+  .slot-top3{margin-top:8px;display:flex;flex-direction:column;gap:5px;}
+  .slot-ticker-row{display:flex;align-items:center;gap:6px;}
+  .slot-ticker{font-family:var(--mono);font-size:12px;font-weight:700;}
+  .slot-action{font-family:var(--mono);font-size:10px;}
+
+  /* MODALS */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999;align-items:center;justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:26px;width:540px;max-width:95vw;max-height:90vh;overflow-y:auto;}
+  .modal-title{font-family:var(--sans);font-size:15px;font-weight:700;margin-bottom:18px;letter-spacing:1px;}
+  .modal-field{margin-bottom:13px;}
+  .modal-label{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;}
+  .modal-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:9px 13px;font-family:var(--mono);font-size:13px;color:var(--text);outline:none;transition:border-color .15s;}
+  .modal-input:focus{border-color:var(--green);}
+  .modal-select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:9px 13px;font-family:var(--mono);font-size:13px;color:var(--text);outline:none;}
+  .modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+  .modal-btns{display:flex;gap:10px;margin-top:20px;}
+  .btn-primary{background:var(--green);color:#000;border:none;border-radius:6px;padding:10px 20px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:1px;flex:1;}
+  .btn-secondary{background:var(--surface2);color:var(--text-mid);border:1px solid var(--border);border-radius:6px;padding:10px 20px;font-family:var(--mono);font-size:12px;cursor:pointer;letter-spacing:1px;}
+  .btn-small{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:4px 10px;font-family:var(--mono);font-size:10px;color:var(--text-dim);cursor:pointer;transition:all .15s;}
+  .btn-small:hover{border-color:var(--green);color:var(--green);}
+  .btn-close-trade{background:var(--green-dim);border:1px solid var(--green);border-radius:5px;padding:5px 11px;font-family:var(--mono);font-size:10px;color:var(--green);cursor:pointer;}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--green);color:#000;font-family:var(--mono);font-size:12px;font-weight:700;padding:11px 20px;border-radius:6px;opacity:0;transform:translateY(10px);transition:all .3s;z-index:9999;letter-spacing:1px;}
+  .toast.show{opacity:1;transform:translateY(0);}
+
+  /* TOOLTIP */
+  .tooltip-wrap{position:relative;display:inline-flex;align-items:center;}
+  .tooltip-wrap .tooltip-box{
+    display:none;position:absolute;top:calc(100% + 8px);left:50%;
+    transform:translateX(-50%);
+    background:var(--surface2);border:1px solid var(--yellow);
+    border-radius:8px;padding:12px 16px;width:280px;z-index:999;
+    font-family:var(--mono);font-size:11px;line-height:1.6;
+  }
+  .tooltip-wrap:hover .tooltip-box{display:block;}
+  .tooltip-box .tt-row{display:flex;align-items:flex-start;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);}
+  .tooltip-box .tt-row:last-child{border-bottom:none;}
+  .tooltip-box .tt-label{font-weight:700;white-space:nowrap;}
+  .tooltip-box .tt-desc{color:var(--text-mid);font-size:10px;}
+
+  .footer{text-align:center;padding:22px;font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:2px;border-top:1px solid var(--border);margin-top:8px;}
+  .card{animation:fadeUp .3s ease both;}
+  .extended-only{display:none;}
+  .extended-only.visible{display:block;}
+  .grid-2.extended-only{display:none;}
+  .grid-2.extended-only.visible{display:grid;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="logo-wrap">
+      <div class="logo">LEM◈RA <span class="logo-sub">Trading Intelligence</span></div>
+      <div class="logo-date" id="topbar-date" style="color:var(--green);font-size:11px;padding-left:2px;">—</div>
+    </div>
+  </div>
+  <div class="topbar-center">
+    <div class="mode-wrap">
+      <button class="mode-btn" data-mode="premarket" onclick="setMode('premarket')">🌅 Pre-Market</button>
+      <div class="mode-divider"></div>
+      <button class="mode-btn active" data-mode="daily" onclick="setMode('daily')">📊 Daily</button>
+      <div class="mode-divider"></div>
+      <button class="mode-btn" data-mode="intraday" onclick="setMode('intraday')">🔄 Intraday</button>
+      <div class="mode-divider"></div>
+      <button class="mode-btn" data-mode="postclose" onclick="setMode('postclose')">🌙 Post-Close</button>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="price-pill"><span class="pl">SPY</span><input class="pv" id="p-spy" value="715.15" onchange="saveMarketData()"></div>
+    <div class="price-pill"><span class="pl">QQQ</span><input class="pv" id="p-qqq" value="664.01" onchange="saveMarketData()"></div>
+    <div class="price-pill"><span class="pl">VIX</span><input class="pv pv-vix" id="p-vix" value="18.53" onchange="saveMarketData()"></div>
+    <div class="price-pill"><span class="pl">NQ</span><input class="pv" id="p-nq" value="27,393" onchange="saveMarketData()"></div>
+    <div class="tooltip-wrap" style="z-index:300;">
+      <div style="background:var(--yellow-dim);border:1px solid var(--yellow);border-radius:4px;padding:5px 11px;font-family:var(--mono);font-size:10px;color:var(--yellow);letter-spacing:1px;cursor:help;white-space:nowrap;">🟡 Selective Risk-On · 62% ℹ</div>
+      <div class="tooltip-box" style="z-index:500;left:auto;right:0;transform:none;top:calc(100% + 10px);bottom:auto;">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--yellow);letter-spacing:1px;margin-bottom:10px;text-transform:uppercase;font-weight:700;">Regime Labels</div>
+        <div class="tt-row"><span class="tt-label" style="color:var(--green);">🟢 Broad Risk-On</span><span class="tt-desc">Todo sube — alcista amplio — agresivo</span></div>
+        <div class="tt-row"><span class="tt-label" style="color:var(--yellow);">🟡 Selective Risk-On</span><span class="tt-desc">Solo los mejores suben — stock picking</span></div>
+        <div class="tt-row"><span class="tt-label" style="color:var(--orange);">🟠 Headline-Fragile</span><span class="tt-desc">Sensible a noticias — spreads, size reducido</span></div>
+        <div class="tt-row"><span class="tt-label" style="color:var(--red);">🔴 Risk-Off</span><span class="tt-desc">Bajista — puts, sideline o no operar</span></div>
+      </div>
+    </div>
+    <span class="pulse"></span>
+  </div>
+</div>
+
+<div class="tabs-bar">
+  <button class="menu-btn on" id="port-btn" onclick="togglePortfolio()">📊 Portfolio</button>
+  <button class="menu-btn" onclick="newTradingDay()" style="border-color:var(--blue);color:var(--blue);">📅 New Day</button>
+  <div style="display:flex;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+    <button class="menu-btn on" id="view-short-btn" onclick="setView('short')" style="border-radius:0;border:none;padding:5px 10px;font-size:10px;">📋 Short</button>
+    <div style="width:1px;height:18px;background:var(--border);"></div>
+    <button class="menu-btn" id="view-ext-btn" onclick="setView('extended')" style="border-radius:0;border:none;padding:5px 10px;font-size:10px;">📄 Extended</button>
+  </div>
+  <a href="https://finviz.com/map.ashx?t=sec" target="_blank" rel="noopener" class="menu-btn on" style="text-decoration:none;">🗺 Heatmap</a>
+  <div style="width:1px;height:20px;background:var(--border);margin:0 8px;"></div>
+  <div class="tab active" onclick="showTab('daily',this)">📊 Daily Report</div>
+  <div class="tab" onclick="showTab('entries',this)">📋 Entradas del Día</div>
+  <div class="tab" onclick="showTab('reports',this)">🗂 Reportes del Día</div>
+  <div class="tab" onclick="showTab('history',this)">📆 Historial de Días</div>
+</div>
+
+<!-- ══════ TAB 1 — DAILY REPORT ══════ -->
+<div class="page visible" id="tab-daily">
+
+  <!-- PORTFOLIO -->
+  <div class="port-wrapper" id="port-wrapper">
+    <div class="card">
+      <div class="section-header" style="cursor:default;margin-bottom:14px;">
+        <span class="section-num">PORT</span>
+        <span class="section-title">Portfolio Summary</span>
+        <span class="section-ts">Lunes April 27, 2026 · 12:49 PM CDT</span>
+      </div>
+      <div class="port-grid">
+        <div class="port-item"><div class="p-num" style="color:var(--green)">$20,000</div><div class="p-label">Capital Disponible</div></div>
+        <div class="port-item"><div class="p-num" style="color:var(--green)" id="active-trades">0</div><div class="p-label">Trades Seleccionados</div></div>
+        <div class="port-item"><div class="p-num" style="color:var(--yellow)">~$500</div><div class="p-label">Riesgo Estimado</div></div>
+        <div class="port-item"><div class="p-num" style="color:var(--blue)">59%</div><div class="p-label">Confidence</div></div>
+        <div class="port-item"><div class="p-num" style="color:var(--text-mid)" id="open-positions">0</div><div class="p-label">Posiciones Abiertas</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!--  PRE-MARKET PANEL  -->
+  <div class="mode-panel" id="panel-premarket">
+    <div class="action-premarket">
+      <div class="hero-title" style="color:var(--yellow);">🌅 Pre-Market — Overnight Tone + Top Setups para Hoy</div>
+      <div class="overnight-grid">
+        <div class="overnight-item"><div class="o-label">NQ Futures</div><div class="o-value" style="color:var(--green);">27,393 ▲</div></div>
+        <div class="overnight-item"><div class="o-label">ES Futures</div><div class="o-value" style="color:var(--green);">5,680 ▲</div></div>
+        <div class="overnight-item"><div class="o-label">Oil (WTI)</div><div class="o-value" style="color:var(--red);">$96.08 ▲</div></div>
+        <div class="overnight-item"><div class="o-label">VIX Pre-Market</div><div class="o-value" style="color:var(--yellow);">18.71</div></div>
+        <div class="overnight-item"><div class="o-label">Asia Tone</div><div class="o-value" style="color:var(--green);">Nikkei +1.38%</div></div>
+        <div class="overnight-item"><div class="o-label">Overnight Bias</div><div class="o-value" style="color:var(--yellow);">MIXED</div></div>
+      </div>
+      <div class="extended-only" id="ext-premarket">
+      <table>
+        <thead><tr><th>#</th><th>Ticker</th><th>Setup</th><th>Trigger</th><th>Razón</th><th>DTE</th><th>Conviction</th></tr></thead>
+        <tbody>
+          <tr><td style="color:var(--text-dim);">01</td><td><div class="ticker">MU</div><div class="ticker-price price-up">$520.95 +4.88%</div></td><td><span class="structure-sw">Bull Call Spread</span></td><td><div class="entry-val">Hold >$522 open</div></td><td style="font-size:11px;color:var(--text-mid);">Memory AI leadership — strongest semi</td><td style="color:var(--blue);font-weight:700;">12d</td><td><span class="badge badge-enter">HIGH</span></td></tr>
+          <tr><td style="color:var(--text-dim);">02</td><td><div class="ticker">DPZ</div><div class="ticker-price price-down">$333.05 -9.46%</div></td><td><span class="structure-sw">Bear Put Spread</span></td><td><div class="entry-val">Hold <$336 open</div></td><td style="font-size:11px;color:var(--text-mid);">Earnings miss — continuation bearish</td><td style="color:var(--blue);font-weight:700;">12d</td><td><span class="badge badge-enter">HIGH</span></td></tr>
+          <tr><td style="color:var(--text-dim);">03</td><td><div class="ticker">NVDA</div><div class="ticker-price price-up">$214.12 +2.81%</div></td><td><span class="structure-sw">Bull Call Spread</span></td><td><div class="entry-val">Pullback $210–211</div></td><td style="font-size:11px;color:var(--text-mid);">AI momentum — esperar pullback</td><td style="color:var(--blue);font-weight:700;">12d</td><td><span class="badge badge-wait">MED</span></td></tr>
+        </tbody>
+      </table>
+      </div><!-- end ext-premarket -->
+      <div class="rule-alert" style="border-color:var(--yellow);color:var(--yellow);background:#1a1400;">
+        ⚡ Esperar 10:00 AM CST mínimo para cualquier entrada. Confirmar /NQ verde al open.
+      </div>
+    </div>
+  </div>
+
+  <!--  DAILY PANEL  -->
+  <div class="mode-panel visible" id="panel-daily">
+    <div class="dte-legend">
+      <div class="dte-pill dte-swing">📈 SWING — 8-15 DTE</div>
+      <div class="dte-pill dte-tactical">⚡ TÁCTICO — 1-3 DTE</div>
+    </div>
+
+    <!-- SWING TABLE -->
+    <div class="action-hero">
+      <div class="hero-title" style="color:var(--green);">📈 TOP 5 SWING — 8-15 DTE · Selecciona lo que vas a ejecutar</div>
+      <table>
+        <thead><tr><th>Exec</th><th>#</th><th>Ticker</th><th>Acción</th><th>Dirección</th><th>Estructura</th><th>Entry</th><th>Stop</th><th>Trim +40%</th><th>Target +75%</th><th>Ctrts</th><th>Webull</th></tr></thead>
+        <tbody id="swing-tbody"></tbody>
+      </table>
+      <div class="rule-alert">⚡ <strong>REGLA SECTOR:</strong> MU y NVDA = mismo sector — elige UNO. Configurar alerta Webull ANTES de ejecutar.</div>
+    </div>
+
+    <!-- TACTICAL TABLE -->
+    <div class="action-tactical">
+      <div class="hero-title" style="color:var(--purple);">⚡ TOP 3 TÁCTICOS — 1-3 DTE · Corto plazo</div>
+      <table>
+        <thead><tr><th>Exec</th><th>#</th><th>Ticker</th><th>Acción</th><th>Dirección</th><th>Estructura</th><th>Entry</th><th>Stop</th><th>Target</th><th>DTE</th><th>Ctrts</th><th>Webull</th></tr></thead>
+        <tbody id="tactical-tbody"></tbody>
+      </table>
+      <div class="rule-alert" style="border-color:var(--purple);color:var(--purple);background:#1a0a2e;">⚠ <strong>TÁCTICOS:</strong> Exit obligatorio antes de 2PM CST si 1 DTE. Max 1 contrato. Stop -20% automático.</div>
+    </div>
+
+    <!-- REGIME + SECTOR -->
+    <div class="extended-only" id="ext-sections">
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-header" style="cursor:default;"><span class="section-num">01</span><span class="section-title">Market Regime</span></div>
+        <div class="regime-grid">
+          <div class="regime-item"><div class="r-label">Trend</div><div class="r-value" style="color:var(--yellow)">Mixed / Flat</div></div>
+          <div class="regime-item"><div class="r-label">Volatility</div><div class="r-value" style="color:var(--yellow)">VIX 18.53</div></div>
+          <div class="regime-item"><div class="r-label">Breadth</div><div class="r-value" style="color:var(--yellow)">Narrow Rally</div></div>
+          <div class="regime-item"><div class="r-label">Sentiment</div><div class="r-value" style="color:var(--yellow)">Cautious</div></div>
+          <div class="regime-item"><div class="r-label">Macro Risk</div><div class="r-value" style="color:var(--red)">Iran / Oil</div></div>
+          <div class="regime-item"><div class="r-label">Earnings</div><div class="r-value" style="color:var(--red)">MAG-7 Wed/Thu</div></div>
+        </div>
+        <div style="background:var(--green-dim);border:1px solid var(--green);border-radius:6px;padding:10px 14px;font-family:var(--mono);font-size:11px;color:var(--green);">Preferred Structure: <strong>Debit Spreads First</strong> — VIX 18.5</div>
+      </div>
+      <div class="card">
+        <div class="section-header" style="cursor:default;"><span class="section-num">02</span><span class="section-title">Sector Strength Map</span></div>
+        <div class="sector-row"><div class="sector-dot s-green"></div><div class="sector-name">Semis — NVDA/MU</div><div class="sector-reason">NVDA +3.98% $5T · MU +5.65%</div><span class="sector-tag tag-fresh">LEADING</span></div>
+        <div class="sector-row"><div class="sector-dot s-green"></div><div class="sector-name">Auto / High Beta</div><div class="sector-reason">TSLA cierra cerca highs</div><span class="sector-tag tag-fresh">LEADING</span></div>
+        <div class="sector-row"><div class="sector-dot s-green"></div><div class="sector-name">Financials</div><div class="sector-reason">BAC +0.96% · XLF verde</div><span class="sector-tag tag-fresh">CONSTRUCTIVE</span></div>
+        <div class="sector-row"><div class="sector-dot s-green"></div><div class="sector-name">Energy / Oil</div><div class="sector-reason">USO fuerte · XOM/CVX rezagan</div><span class="sector-tag tag-fresh">MACRO WATCH</span></div>
+        <div class="sector-row"><div class="sector-dot s-red"></div><div class="sector-name">Broad Semis (SMH)</div><div class="sector-reason">SMH flat — NVDA/MU divergen</div><span class="sector-tag tag-weak">LAGGING</span></div>
+        <div class="sector-row"><div class="sector-dot s-red"></div><div class="sector-name">Consumer / DPZ</div><div class="sector-reason">DPZ -9.46% earnings miss</div><span class="sector-tag tag-weak">BREAKDOWN</span></div>
+      </div>
+    </div>
+
+    <!-- WATCHLIST + REJECTED -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-header" style="cursor:default;"><span class="section-num">WL</span><span class="section-title">Watchlist</span></div>
+        <table><thead><tr><th>Ticker</th><th>Trigger</th><th>Razón</th></tr></thead><tbody>
+          <tr><td><span class="ticker" style="font-size:13px;">NVDA</span></td><td><span class="entry-val">Pullback $210–211</span></td><td style="font-size:11px;color:var(--text-dim);">Si MU ya tomado</td></tr>
+          <tr><td><span class="ticker" style="font-size:13px;">QCOM</span></td><td><span class="entry-val">Hold intraday high</span></td><td style="font-size:11px;color:var(--text-dim);">OpenAI — earnings Apr29 ⚠</td></tr>
+          <tr><td><span class="ticker" style="font-size:13px;">VZ</span></td><td><span class="entry-val">Hold >$48</span></td><td style="font-size:11px;color:var(--text-dim);">Post-earnings cont.</td></tr>
+          <tr><td><span class="ticker" style="font-size:13px;">PLTR</span></td><td><span class="entry-val">Hold >$145</span></td><td style="font-size:11px;color:var(--text-dim);">AI/defense momentum</td></tr>
+          <tr><td><span class="ticker" style="font-size:13px;color:var(--green);">AAPL</span></td><td><span class="entry-val">Post-earnings Viernes</span></td><td style="font-size:11px;color:var(--green);">SIEMPRE ✅</td></tr>
+        </tbody></table>
+      </div>
+      <div class="card">
+        <div class="section-header" style="cursor:default;"><span class="section-num">❌</span><span class="section-title">Rejected</span></div>
+        <table><thead><tr><th>Ticker</th><th>Razón</th><th>Perdió vs</th></tr></thead><tbody>
+          <tr><td><span class="ticker" style="font-size:13px;color:var(--red);">META</span></td><td style="font-size:11px;color:var(--red);">⛔ Earnings Wed Apr 29</td><td style="font-size:11px;color:var(--text-dim);">Regla Hard</td></tr>
+          <tr><td><span class="ticker" style="font-size:13px;color:var(--red);">QCOM</span></td><td style="font-size:11px;color:var(--red);">⛔ Earnings Apr 29</td><td style="font-size:11px;color:var(--text-dim);">MU/NVDA</td></tr>
+          <tr><td><span class="ticker" style="font-size:13px;color:var(--text-dim);">MRVL</span></td><td style="font-size:11px;color:var(--text-dim);">-5.45% POET cancel</td><td style="font-size:11px;color:var(--text-dim);">MU</td></tr>
+          <tr><td><span class="ticker" style="font-size:13px;color:var(--text-dim);">AMD</span></td><td style="font-size:11px;color:var(--text-dim);">Laggard semi</td><td style="font-size:11px;color:var(--text-dim);">NVDA/MU</td></tr>
+          <tr><td><span class="ticker" style="font-size:13px;color:var(--text-dim);">TSLA</span></td><td style="font-size:11px;color:var(--text-dim);">Menor setup quality</td><td style="font-size:11px;color:var(--text-dim);">MU/NVDA</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <!-- NEWS collapsible — al final del Daily -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="section-num">📰</span>
+          <span class="section-title" style="font-size:14px;">Noticias del Día</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);">15 items · April 27, 2026</span>
+        </div>
+        <button class="news-toggle-btn" id="news-btn" onclick="toggleNews()">▼ Ver Noticias</button>
+      </div>
+      <div class="news-panel" id="news-panel"></div>
+    </div>
+  </div>
+
+  </div><!-- end extended-only -->
+
+  <!--  INTRADAY PANEL  -->
+  <div class="mode-panel" id="panel-intraday">
+    <div class="action-intraday">
+      <div class="hero-title" style="color:var(--cyan);">🔄 Intraday Recheck — Estado de Posiciones Activas</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:14px;">Última revisión: <span style="color:var(--cyan);" id="intraday-time">— —</span> &nbsp;|&nbsp; <button onclick="document.getElementById('intraday-time').textContent=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})+' CST'" style="background:var(--surface2);border:1px solid var(--cyan);border-radius:4px;padding:2px 8px;font-family:var(--mono);font-size:10px;color:var(--cyan);cursor:pointer;">Actualizar hora</button></div>
+      <table>
+        <thead><tr><th>Ticker</th><th>Tipo</th><th>Precio Actual</th><th>vs Entry</th><th>¿Válido?</th><th>¿Trigger?</th><th>R/R OK?</th><th>Decisión</th><th>Notas</th></tr></thead>
+        <tbody id="intraday-tbody"></tbody>
+      </table>
+      <div style="margin-top:14px;background:var(--cyan-dim);border:1px solid var(--cyan);border-radius:8px;padding:14px;">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">🔍 Nuevos Setups Detectados Intraday</div>
+        <div id="intraday-new-setups" style="font-family:var(--mono);font-size:11px;color:var(--text-dim);">Sin nuevos setups frescos vs reporte de la mañana.</div>
+      </div>
+    </div>
+  </div>
+
+  <!--  POST-CLOSE PANEL  -->
+  <div class="mode-panel" id="panel-postclose">
+    <div class="action-postclose">
+      <div class="hero-title" style="color:var(--purple);">🌙 Post-Close — Resumen del Día + Setups para Mañana</div>
+
+      <div style="font-family:var(--mono);font-size:11px;color:var(--purple);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">Resumen de Sesión</div>
+      <div class="overnight-grid" style="margin-bottom:18px;">
+        <div class="overnight-item"><div class="o-label">SPY Cierre vs Open</div><div class="o-value" style="color:var(--green);" id="pc-spy">+0.27%</div></div>
+        <div class="overnight-item"><div class="o-label">QQQ Cierre vs Open</div><div class="o-value" style="color:var(--yellow);" id="pc-qqq">-0.12%</div></div>
+        <div class="overnight-item"><div class="o-label">VIX Cierre</div><div class="o-value" style="color:var(--yellow);" id="pc-vix">18.71</div></div>
+        <div class="overnight-item"><div class="o-label">Sesión Label</div><div class="o-value" style="color:var(--yellow);">Selective R-On</div></div>
+        <div class="overnight-item"><div class="o-label">Sector Líder</div><div class="o-value" style="color:var(--green);">Semis / Energy</div></div>
+        <div class="overnight-item"><div class="o-label">Earnings Mañana</div><div class="o-value" style="color:var(--red);">MSFT/META/AMZN</div></div>
+      </div>
+
+      <div class="extended-only" id="ext-postclose">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--purple);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">Top 5 Setups para Mañana</div>
+      <table>
+        <thead><tr><th>#</th><th>Ticker</th><th>Dirección</th><th>Setup</th><th>Catalyst</th><th>Entry Mañana</th><th>Stop</th><th>Conviction</th></tr></thead>
+        <tbody>
+          <tr><td style="color:var(--text-dim);">01</td><td><div class="ticker">NVDA</div><div class="ticker-price price-up">$216.61 +3.98%</div></td><td><span class="badge badge-enter">CALL</span></td><td><span class="structure-sw">May9 215C/225C</span></td><td style="font-size:11px;">Best fresh long — AI leadership</td><td><div class="entry-val">Reclaim &gt;$216 · 15min confirm</div></td><td><div class="stop-val">$210</div></td><td><span class="badge badge-enter">HIGH</span></td></tr>
+          <tr><td style="color:var(--text-dim);">02</td><td><div class="ticker">MU</div><div class="ticker-price price-up">$524.56 +5.65%</div></td><td><span class="badge badge-enter">CALL</span></td><td><span class="structure-sw">May9 520C/540C</span></td><td style="font-size:11px;">Strongest leader — extendido</td><td><div class="entry-val">Hold &gt;$520 pullback/retest</div></td><td><div class="stop-val">$507</div></td><td><span class="badge badge-enter">HIGH</span></td></tr>
+          <tr><td style="color:var(--text-dim);">03</td><td><div class="ticker">DPZ</div><div class="ticker-price price-down">$335.30 -9.46%</div></td><td><span class="badge badge-skip">PUT</span></td><td><span class="structure-sw">May9 335P/320P</span></td><td style="font-size:11px;">Cleanest bearish continuation</td><td><div class="entry-val">Stay &lt;$336 · bounce fail</div></td><td><div class="stop-val">$342</div></td><td><span class="badge badge-enter">HIGH</span></td></tr>
+          <tr><td style="color:var(--text-dim);">04</td><td><div class="ticker">TSLA</div><div class="ticker-price price-up">$378.67 +2.10%</div></td><td><span class="badge badge-enter">CALL</span></td><td><span class="structure-sw">May9 380C/395C</span></td><td style="font-size:11px;">Upgraded — momentum recovery</td><td><div class="entry-val">Hold &gt;$380.70 · breakout</div></td><td><div class="stop-val">$369</div></td><td><span class="badge badge-optional">MED-HIGH</span></td></tr>
+          <tr><td style="color:var(--text-dim);">05</td><td><div class="ticker">BAC</div><div class="ticker-price price-up">$52.63 +0.96%</div></td><td><span class="badge badge-enter">CALL</span></td><td><span class="structure-sw">May9 52.5C/55C</span></td><td style="font-size:11px;">Best non-tech diversifier</td><td><div class="entry-val">Hold &gt;$52.60</div></td><td><div class="stop-val">$51.80</div></td><td><span class="badge badge-optional">MED</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+      </div><!-- end ext-postclose -->
+  </div>
+
+</div><!-- end tab-daily -->
+
+<!-- ══════ TAB 2 — ENTRADAS ══════ -->
+<div class="page" id="tab-entries">
+  <div class="card">
+    <div class="section-header" style="cursor:default;">
+      <span class="section-num">📋</span><span class="section-title">Entradas del Día</span>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-left:4px;">April 27, 2026</span>
+      <button class="btn-secondary" style="margin-left:auto;padding:6px 16px;font-size:11px;" onclick="openAddEntry()">+ Nueva Entrada</button>
+    </div>
+    <div id="entries-container"></div>
+  </div>
+  <div class="card">
+    <div class="section-header" style="cursor:default;"><span class="section-num">HIST</span><span class="section-title">Historial de Trades</span>
+      <div style="margin-left:auto;display:flex;gap:8px;">
+        <button class="menu-btn" onclick="importPastTrades()" title="Cargar trades pasados desde archivo CSV">📂 Cargar Past Trades</button>
+        <button class="menu-btn on" onclick="exportCSV()">⬇ Export CSV</button>
+        <input type="file" id="csv-import" accept=".csv" style="display:none;" onchange="handleCSVImport(event)">
+      </div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table><thead><tr><th>Fecha</th><th>Ticker</th><th>Tipo</th><th>DTE</th><th>Estructura</th><th>Entry $</th><th>Exit $</th><th>Costo</th><th>P&L</th><th>ROI</th><th>Result</th></tr></thead>
+      <tbody id="history-tbody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ TAB 3 — REPORTES ══════ -->
+<div class="page" id="tab-reports">
+  <div class="card">
+    <div class="section-header" style="cursor:default;"><span class="section-num">🗂</span><span class="section-title">Reportes del Día — April 27, 2026</span></div>
+    <div class="report-slots">
+      <div class="report-slot" id="slot-premarket"><div class="slot-label">Pre-Market</div><div class="slot-title">7:00 AM CDT</div><div id="pm-content"><div class="slot-empty">Sin reporte</div></div><button class="slot-add-btn" onclick="openReportModal('premarket')">+ Pegar</button></div>
+      <div class="report-slot has-data" id="slot-daily"><div class="slot-label">Daily</div><div class="slot-title">12:49 PM CDT</div><div class="slot-top3"><div class="slot-ticker-row"><span class="slot-ticker">MU</span><span class="slot-action" style="color:var(--green);">✅ ENTRA</span></div><div class="slot-ticker-row"><span class="slot-ticker">DPZ</span><span class="slot-action" style="color:var(--green);">✅ ENTRA</span></div><div class="slot-ticker-row"><span class="slot-ticker">NVDA</span><span class="slot-action" style="color:var(--yellow);">⚠ ESPERA</span></div></div><button class="slot-add-btn" onclick="openReportModal('daily')">✏ Editar</button></div>
+      <div class="report-slot" id="slot-intraday"><div class="slot-label">Intraday</div><div class="slot-title">— —</div><div><div class="slot-empty">Sin reporte</div></div><button class="slot-add-btn" onclick="openReportModal('intraday')">+ Pegar</button></div>
+      <div class="report-slot" id="slot-postclose"><div class="slot-label">Post-Close</div><div class="slot-title">4:00 PM CDT</div><div><div class="slot-empty">Sin reporte</div></div><button class="slot-add-btn" onclick="openReportModal('postclose')">+ Pegar</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ TAB 4 — HISTORIAL DE DÍAS ══════ -->
+<div class="page" id="tab-history">
+  <div style="max-width:1400px;margin:0 auto;padding:20px 24px;">
+    <div class="card">
+      <div class="section-header" style="cursor:default;">
+        <span class="section-num">📆</span>
+        <span class="section-title">Historial de Días de Trading</span>
+        <button class="menu-btn on" onclick="exportAllCSV()" style="margin-left:auto;">⬇ Export Todo CSV</button>
+      </div>
+      <div id="days-history-container">
+        <div style="font-family:var(--mono);font-size:12px;color:var(--text-dim);text-align:center;padding:40px;">Sin días archivados aún. Usa "📅 New Day" para archivar el día actual.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">LEM◈RA LLC</div>
+
+<!-- MODAL ENTRY -->
+<div class="modal-overlay" id="entry-modal">
+  <div class="modal">
+    <div class="modal-title" id="entry-modal-title">📋 Nueva Entrada</div>
+    <input type="hidden" id="edit-id">
+    <div class="modal-grid">
+      <div class="modal-field"><div class="modal-label">Ticker</div><input class="modal-input" id="j-ticker" placeholder="MU"></div>
+      <div class="modal-field"><div class="modal-label">Tipo</div><select class="modal-select" id="j-type"><option value="bull_call_spread">📈 Bull Call Spread</option><option value="bear_put_spread">📉 Bear Put Spread</option><option value="naked_call">☎ Naked Call</option><option value="naked_put">☎ Naked Put</option><option value="call_debit">Call Debit</option><option value="put_debit">Put Debit</option><option value="covered_call">Covered Call</option><option value="other">Otro</option></select></div>
+      <div class="modal-field"><div class="modal-label">Duración</div><select class="modal-select" id="j-dur"><option value="swing">📈 Swing 8-15 DTE</option><option value="tactical">⚡ Táctico 1-3 DTE</option></select></div>
+      <div class="modal-field"><div class="modal-label">DTE</div><input class="modal-input" id="j-dte" placeholder="12" type="number"></div>
+      <div class="modal-field"><div class="modal-label">Estructura</div><input class="modal-input" id="j-struct" placeholder="May9 520C/540C"></div>
+      <div class="modal-field"><div class="modal-label">Contratos</div><input class="modal-input" id="j-ctrts" placeholder="1" type="number"></div>
+      <div class="modal-field"><div class="modal-label">Entry Stock ($)</div><input class="modal-input" id="j-entry" placeholder="520.95"></div>
+      <div class="modal-field"><div class="modal-label">Stop Stock ($)</div><input class="modal-input" id="j-stop" placeholder="507.00"></div>
+      <div class="modal-field"><div class="modal-label">Costo Opción ($)</div><input class="modal-input" id="j-cost" placeholder="2.50"></div>
+      <div class="modal-field"><div class="modal-label">Estado</div><select class="modal-select" id="j-status" onchange="toggleExit()"><option value="open">🟡 Abierto</option><option value="closed-win">✅ Ganancia</option><option value="closed-loss">❌ Pérdida</option><option value="closed-even">➡ Break Even</option></select></div>
+    </div>
+    <div class="modal-field"><div class="modal-label">Notas</div><input class="modal-input" id="j-notes" placeholder="Catalyst, razón..."></div>
+    <div class="modal-field" id="exit-field" style="display:none;"><div class="modal-label">Precio Exit Opción ($)</div><input class="modal-input" id="j-exit" placeholder="3.75"></div>
+    <div class="modal-btns"><button class="btn-primary" onclick="saveEntry()">Guardar</button><button class="btn-secondary" onclick="closeModal('entry-modal')">Cancelar</button></div>
+  </div>
+</div>
+
+<!-- MODAL CLOSE -->
+<div class="modal-overlay" id="close-modal">
+  <div class="modal" style="width:380px;">
+    <div class="modal-title">🔒 Cerrar Trade</div>
+    <input type="hidden" id="close-id">
+    <div class="modal-field"><div class="modal-label">Precio Exit Opción ($)</div><input class="modal-input" id="close-exit" type="number" step="0.01" placeholder="3.75"></div>
+    <div class="modal-field"><div class="modal-label">Resultado</div><select class="modal-select" id="close-result"><option value="closed-win">✅ Ganancia</option><option value="closed-loss">❌ Pérdida</option><option value="closed-even">➡ Break Even</option></select></div>
+    <div class="modal-btns"><button class="btn-primary" onclick="confirmClose()">Confirmar</button><button class="btn-secondary" onclick="closeModal('close-modal')">Cancelar</button></div>
+  </div>
+</div>
+
+<!-- MODAL REPORT -->
+<div class="modal-overlay" id="report-modal">
+  <div class="modal" style="width:540px;">
+    <div class="modal-title" id="report-modal-title">📄 Reporte</div>
+    <div class="modal-field"><div class="modal-label">Top 5 — una línea por trade</div><textarea class="modal-input" id="r-content" rows="6" placeholder="MU — ENTRA 520/540&#10;DPZ — ENTRA PUT&#10;NVDA — ESPERA"></textarea></div>
+    <div class="modal-field"><div class="modal-label">Hora</div><input class="modal-input" id="r-time" placeholder="12:49 PM CDT"></div>
+    <div class="modal-btns"><button class="btn-primary" onclick="saveReport()">Guardar</button><button class="btn-secondary" onclick="closeModal('report-modal')">Cancelar</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// LEMORA Trading Intelligence — Supabase Config
+const SUPABASE_URL = 'https://ekkzaxulcfgcbzqmuean.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_O48kfu4PNhRCEI2L0Mok6A_0HgPNmWP';
+
+// Initialize Supabase client
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── REPORTS ──────────────────────────────────────────────────
+async function getTodayReport(date, type) {
+  const { data, error } = await db
+    .from('reports')
+    .select('*')
+    .eq('report_date', date)
+    .eq('report_type', type)
+    .order('created_at', { ascending: false })
+    .limit(1);
+  if (error) console.error('Error fetching report:', error);
+  return data?.[0] || null;
+}
+
+async function getLatestReport(type) {
+  const { data, error } = await db
+    .from('reports')
+    .select('*')
+    .eq('report_type', type)
+    .order('report_datetime', { ascending: false })
+    .limit(1);
+  if (error) console.error('Error fetching latest report:', error);
+  return data?.[0] || null;
+}
+
+async function insertReport(reportData) {
+  const { data, error } = await db
+    .from('reports')
+    .insert([reportData])
+    .select();
+  if (error) console.error('Error inserting report:', error);
+  return data?.[0] || null;
+}
+
+// ── SETUPS ───────────────────────────────────────────────────
+async function getSetupsByReport(reportId) {
+  const { data, error } = await db
+    .from('report_setups')
+    .select('*')
+    .eq('report_id', reportId)
+    .order('rank', { ascending: true });
+  if (error) console.error('Error fetching setups:', error);
+  return data || [];
+}
+
+async function insertSetups(setups) {
+  const { data, error } = await db
+    .from('report_setups')
+    .insert(setups)
+    .select();
+  if (error) console.error('Error inserting setups:', error);
+  return data || [];
+}
+
+// ── EXECUTIONS ───────────────────────────────────────────────
+async function getOpenExecutions() {
+  const { data, error } = await db
+    .from('executions')
+    .select('*')
+    .eq('execution_status', 'open')
+    .order('entry_datetime', { ascending: false });
+  if (error) console.error('Error fetching executions:', error);
+  return data || [];
+}
+
+async function getAllExecutions() {
+  const { data, error } = await db
+    .from('executions')
+    .select('*')
+    .order('entry_datetime', { ascending: false });
+  if (error) console.error('Error fetching executions:', error);
+  return data || [];
+}
+
+async function insertExecution(executionData) {
+  const { data, error } = await db
+    .from('executions')
+    .insert([executionData])
+    .select();
+  if (error) console.error('Error inserting execution:', error);
+  return data?.[0] || null;
+}
+
+async function updateExecution(executionId, updates) {
+  const { data, error } = await db
+    .from('executions')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('execution_id', executionId)
+    .select();
+  if (error) console.error('Error updating execution:', error);
+  return data?.[0] || null;
+}
+
+// ── NEWS ─────────────────────────────────────────────────────
+async function getNewsByReport(reportId) {
+  const { data, error } = await db
+    .from('news_items')
+    .select('*')
+    .eq('report_id', reportId)
+    .order('rank', { ascending: true });
+  if (error) console.error('Error fetching news:', error);
+  return data || [];
+}
+
+// ── WATCHLIST ────────────────────────────────────────────────
+async function getWatchlistByReport(reportId) {
+  const { data, error } = await db
+    .from('watchlist_items')
+    .select('*')
+    .eq('report_id', reportId)
+    .order('rank', { ascending: true });
+  if (error) console.error('Error fetching watchlist:', error);
+  return data || [];
+}
+
+// ── TRADING DAYS ─────────────────────────────────────────────
+async function getTradingDays(limit = 30) {
+  const { data, error } = await db
+    .from('trading_days')
+    .select('*')
+    .order('trading_date', { ascending: false })
+    .limit(limit);
+  if (error) console.error('Error fetching trading days:', error);
+  return data || [];
+}
+
+async function upsertTradingDay(dayData) {
+  const { data, error } = await db
+    .from('trading_days')
+    .upsert([dayData], { onConflict: 'trading_date' })
+    .select();
+  if (error) console.error('Error upserting trading day:', error);
+  return data?.[0] || null;
+}
+
+// ── PRIORITY REFERENCE ───────────────────────────────────────
+async function getPriorityRefByReport(reportId) {
+  const { data, error } = await db
+    .from('priority_reference_snapshot')
+    .select('*')
+    .eq('report_id', reportId)
+    .order('ticker', { ascending: true });
+  if (error) console.error('Error fetching priority ref:', error);
+  return data || [];
+}
+
+// Export all functions
+window.LEMORA_DB = {
+  getTodayReport, getLatestReport, insertReport,
+  getSetupsByReport, insertSetups,
+  getOpenExecutions, getAllExecutions, insertExecution, updateExecution,
+  getNewsByReport, getWatchlistByReport,
+  getTradingDays, upsertTradingDay,
+  getPriorityRefByReport,
+  db
+};
+
+</script>
+<script>
+// LEMORA Trading Intelligence — Main Logic
+// Loads data from Supabase and renders the dashboard
+
+const TODAY = new Date().toISOString().split('T')[0];
+let currentMode = 'daily';
+let currentReport = null;
+let currentSetups = [];
+let openExecutions = [];
+
+// ── INIT ─────────────────────────────────────────────────────
+async function initDashboard() {
+  updateDate();
+  setInterval(updateDate, 60000);
+  await loadMode('daily');
+  await loadOpenPositions();
+  await loadHistory();
+  await loadTradingDays();
+}
+
+function updateDate() {
+  const now = new Date();
+  const days = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const str = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()} · ${now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})} CST`;
+  const el = document.getElementById('topbar-date');
+  if (el) el.textContent = str;
+}
+
+// ── LOAD MODE ────────────────────────────────────────────────
+async function loadMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.querySelector(`.mode-btn[data-mode="${mode}"]`);
+  if (btn) btn.classList.add('active');
+  document.querySelectorAll('.mode-panel').forEach(p => p.classList.remove('visible'));
+  const panel = document.getElementById('panel-' + mode);
+  if (panel) panel.classList.add('visible');
+
+  // Load report from Supabase
+  showLoading(true);
+  const report = await LEMORA_DB.getTodayReport(TODAY, mode);
+  currentReport = report;
+
+  if (report) {
+    await renderReport(report, mode);
+  } else {
+    renderNoReport(mode);
+  }
+  showLoading(false);
+}
+
+// ── RENDER REPORT ────────────────────────────────────────────
+async function renderReport(report, mode) {
+  // Update regime badge
+  updateRegimeBadge(report.regime_label, report.confidence_pct);
+
+  // Update market prices if available
+  if (report.spy_price) document.getElementById('p-spy').value = report.spy_price;
+  if (report.qqq_price) document.getElementById('p-qqq').value = report.qqq_price;
+  if (report.vix_level) document.getElementById('p-vix').value = report.vix_level;
+  if (report.nq_price) document.getElementById('p-nq').value = report.nq_price;
+
+  // Load setups
+  const setups = await LEMORA_DB.getSetupsByReport(report.report_id);
+  currentSetups = setups;
+
+  const swingSetups = setups.filter(s => s.setup_type === 'swing');
+  const tacticalSetups = setups.filter(s => s.setup_type === 'tactical');
+
+  renderSwingTable(swingSetups);
+  renderTacticalTable(tacticalSetups);
+
+  // Load news
+  const news = await LEMORA_DB.getNewsByReport(report.report_id);
+  renderNews(news);
+
+  // Load watchlist
+  const watchlist = await LEMORA_DB.getWatchlistByReport(report.report_id);
+  renderWatchlist(watchlist);
+
+  // Update portfolio summary
+  updatePortfolioSummary(report);
+}
+
+function renderNoReport(mode) {
+  const labels = {
+    pre_market: 'Pre-Market',
+    daily: 'Daily',
+    intraday: 'Intraday',
+    post_close: 'Post-Close'
+  };
+  const tbody = document.getElementById('swing-tbody');
+  if (tbody) {
+    tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:30px;font-family:var(--mono);font-size:12px;color:var(--text-dim);">
+      Sin reporte ${labels[mode] || mode} para hoy. Corre Jacky y manda el PDF a Claude para generar el reporte.
+    </td></tr>`;
+  }
+}
+
+// ── RENDER SWING TABLE ───────────────────────────────────────
+function renderSwingTable(setups) {
+  const tbody = document.getElementById('swing-tbody');
+  if (!tbody) return;
+
+  if (!setups.length) {
+    tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:20px;font-family:var(--mono);font-size:11px;color:var(--text-dim);">Sin setups swing para hoy.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = setups.map((s, i) => {
+    const dirClass = s.direction === 'CALL' ? 'badge-enter' : s.direction === 'PUT' ? 'badge-skip' : 'badge-wait';
+    const actionClass = s.action === 'ENTRA' ? 'badge-enter' : s.action === 'ESPERA' ? 'badge-wait' : s.action === 'SKIP' ? 'badge-skip' : 'badge-optional';
+    const actionLabel = s.action === 'ENTRA' ? '✅ ENTRA' : s.action === 'ESPERA' ? '⚠ ESPERA' : s.action === 'SKIP' ? '⛔ SKIP' : '◎ OPCIONAL';
+    const isOpen = openExecutions.find(e => e.ticker === s.ticker);
+
+    return `<tr>
+      <td style="text-align:center;">
+        <input type="checkbox" class="exec-check" ${isOpen ? 'checked' : ''} 
+          onchange="toggleExecution('${s.setup_id}','${s.ticker}','${s.direction}','${s.primary_structure}','${s.stop_stock}',this)"
+          ${s.action === 'SKIP' ? 'disabled' : ''}>
+      </td>
+      <td style="color:var(--text-dim);font-size:11px;">${String(i+1).padStart(2,'0')}</td>
+      <td>
+        <div class="ticker">${s.ticker}</div>
+        <div class="ticker-price">${s.current_price ? '$'+s.current_price : '—'}</div>
+      </td>
+      <td><span class="badge ${actionClass}">${actionLabel}</span></td>
+      <td><span class="badge ${dirClass}" style="min-width:52px;justify-content:center;">${s.direction || '—'}</span></td>
+      <td><span class="structure-sw">${s.primary_structure || '—'}</span></td>
+      <td><div class="entry-val">${(s.entry_trigger || s.entry_plan || '—').replace(/\n/g,'<br>')}</div></td>
+      <td><div class="stop-val">${s.stop_stock ? '$'+s.stop_stock : '—'}</div></td>
+      <td><div class="target-val">${s.exit_1 || '—'}</div></td>
+      <td><div class="target-val">${s.exit_2 || '—'}</div></td>
+      <td><div class="contracts">1x</div></td>
+      <td>${s.webull_alert ? `<div class="webull-alert">⚠ ${s.webull_alert}</div>` : '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── RENDER TACTICAL TABLE ────────────────────────────────────
+function renderTacticalTable(setups) {
+  const tbody = document.getElementById('tactical-tbody');
+  if (!tbody) return;
+
+  if (!setups.length) {
+    tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:20px;font-family:var(--mono);font-size:11px;color:var(--text-dim);">Sin setups tácticos para hoy.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = setups.map((s, i) => {
+    const dirClass = s.direction === 'CALL' ? 'badge-enter' : 'badge-skip';
+    const actionClass = s.action === 'ENTRA' ? 'badge-tactical' : s.action === 'ESPERA' ? 'badge-wait' : 'badge-skip';
+    const actionLabel = s.action === 'ENTRA' ? '⚡ TÁCTICO' : s.action === 'ESPERA' ? '⚠ ESPERA' : '⛔ SKIP';
+
+    return `<tr>
+      <td style="text-align:center;">
+        <input type="checkbox" style="accent-color:var(--purple);"
+          onchange="toggleExecution('${s.setup_id}','${s.ticker}','${s.direction}','${s.primary_structure}','${s.stop_stock}',this)">
+      </td>
+      <td style="color:var(--text-dim);font-size:11px;">${String(i+1).padStart(2,'0')}</td>
+      <td>
+        <div class="ticker">${s.ticker}</div>
+        <div class="ticker-price">${s.current_price ? '$'+s.current_price : '—'}</div>
+      </td>
+      <td><span class="badge ${actionClass}">${actionLabel}</span></td>
+      <td><span class="badge ${dirClass}" style="min-width:52px;justify-content:center;">${s.direction || '—'}</span></td>
+      <td><span class="structure-tc">${s.primary_structure || '—'}</span></td>
+      <td><div class="entry-val">${(s.entry_trigger || '—').replace(/\n/g,'<br>')}</div></td>
+      <td><div class="stop-val">${s.stop_stock ? '$'+s.stop_stock : '—'}</div></td>
+      <td><div class="target-val">${s.exit_1 || '—'}</div></td>
+      <td style="font-family:var(--mono);font-size:12px;color:var(--purple);font-weight:700;">${s.preferred_dte_bucket || '3d'}</td>
+      <td><div class="contracts">1x</div></td>
+      <td>${s.webull_alert ? `<div class="webull-alert" style="border-color:var(--purple);color:var(--purple);">⚠ ${s.webull_alert}</div>` : '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── RENDER NEWS ──────────────────────────────────────────────
+function renderNews(newsItems) {
+  const container = document.getElementById('news-panel');
+  if (!container) return;
+
+  if (!newsItems.length) {
+    container.innerHTML = `<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);padding:20px;text-align:center;">Sin noticias para este reporte.</div>`;
+    return;
+  }
+
+  container.innerHTML = newsItems.map(n => `
+    <div class="news-item">
+      <div class="news-rank">${String(n.rank || 0).padStart(2,'0')}</div>
+      <div class="news-content">
+        <div class="news-headline">
+          ${n.link_reference
+            ? `<a href="${n.link_reference}" target="_blank" rel="noopener">${n.headline} ↗</a>`
+            : n.headline}
+        </div>
+        <div class="news-meta">
+          <span class="news-source">${n.source || ''}</span>
+          <span class="news-impact impact-${(n.market_impact||'low').toLowerCase()}">${n.market_impact || ''}</span>
+          <span class="news-tickers">${n.affected_tickers_sectors || ''}</span>
+          <span class="news-impl">→ ${n.trade_implication || ''}</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ── RENDER WATCHLIST ─────────────────────────────────────────
+function renderWatchlist(items) {
+  const tbody = document.getElementById('watchlist-tbody');
+  if (!tbody) return;
+  if (!items.length) {
+    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;color:var(--text-dim);padding:16px;font-size:11px;">Sin watchlist para este reporte.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = items.map(w => `
+    <tr>
+      <td><span class="ticker" style="font-size:13px;">${w.ticker}</span></td>
+      <td><span class="entry-val">${w.trigger_to_watch || '—'}</span></td>
+      <td style="font-size:11px;color:var(--text-dim);">${w.reason || '—'}</td>
+    </tr>`).join('');
+}
+
+// ── EXECUTIONS ───────────────────────────────────────────────
+async function toggleExecution(setupId, ticker, direction, structure, stopStock, cb) {
+  if (cb.checked) {
+    const exec = await LEMORA_DB.insertExecution({
+      report_id: currentReport?.report_id,
+      setup_id: setupId,
+      ticker,
+      executed: true,
+      execution_status: 'open',
+      direction,
+      structure,
+      stop_stock_price: parseFloat(stopStock) || null,
+      contracts: 1,
+      win_loss: 'OPEN',
+      entry_datetime: new Date().toISOString()
+    });
+    if (exec) {
+      showToast(`${ticker} agregado a posiciones ✅`);
+      await loadOpenPositions();
+      await renderEntries();
+    }
+  } else {
+    // Remove open execution
+    const existing = openExecutions.find(e => e.ticker === ticker && e.execution_status === 'open');
+    if (existing) {
+      await LEMORA_DB.updateExecution(existing.execution_id, { execution_status: 'cancelled' });
+      showToast(`${ticker} removido`);
+      await loadOpenPositions();
+      await renderEntries();
+    }
+  }
+  updatePortfolioCount();
+}
+
+async function loadOpenPositions() {
+  openExecutions = await LEMORA_DB.getOpenExecutions();
+  updatePortfolioCount();
+  await renderIntraday();
+}
+
+function updatePortfolioCount() {
+  const el = document.getElementById('active-trades');
+  if (el) el.textContent = openExecutions.length;
+  const el2 = document.getElementById('open-positions');
+  if (el2) el2.textContent = openExecutions.length;
+}
+
+async function renderEntries() {
+  const container = document.getElementById('entries-container');
+  if (!container) return;
+  const all = await LEMORA_DB.getAllExecutions();
+
+  if (!all.length) {
+    container.innerHTML = `<div style="font-family:var(--mono);font-size:12px;color:var(--text-dim);text-align:center;padding:40px;">Sin entradas. Selecciona trades en la tabla de acción.</div>`;
+    return;
+  }
+
+  const TYPE_LABELS = { swing: '📈 Swing', tactical: '⚡ Táctico' };
+
+  container.innerHTML = all.map(e => {
+    const sc = e.execution_status === 'open' ? 'var(--yellow)'
+      : e.win_loss === 'WIN' ? 'var(--green)'
+      : e.win_loss === 'EVEN' ? 'var(--blue)' : 'var(--red)';
+    const sl = e.execution_status === 'open' ? '🟡 ABIERTO'
+      : e.win_loss === 'WIN' ? '✅ GANANCIA'
+      : e.win_loss === 'EVEN' ? '➡ BREAK EVEN' : '❌ PÉRDIDA';
+
+    return `<div class="journal-entry" style="border-left:3px solid ${e.setup_type === 'tactical' ? 'var(--purple)' : 'var(--green)'};">
+      <div class="je-header">
+        <div class="je-ticker">${e.ticker}</div>
+        <span class="badge" style="background:${sc}22;border:1px solid ${sc};color:${sc};">${sl}</span>
+        <span class="badge" style="background:var(--blue-dim);border:1px solid var(--blue);color:var(--blue);">${TYPE_LABELS[e.setup_type] || 'Swing'}</span>
+        <div class="je-time">${e.entry_datetime ? new Date(e.entry_datetime).toLocaleDateString() : '—'}</div>
+        <div class="je-actions">
+          ${e.execution_status === 'open' ? `<button class="btn-close-trade" onclick="openCloseModal('${e.execution_id}','${e.ticker}')">🔒 Cerrar</button>` : ''}
+        </div>
+      </div>
+      <div class="je-grid-4">
+        <div><div class="je-label">Estructura</div><div class="je-value" style="font-size:12px;">${e.structure || '—'}</div></div>
+        <div><div class="je-label">Dirección</div><div class="je-value">${e.direction || '—'}</div></div>
+        <div><div class="je-label">Stop Stock</div><div class="je-value" style="color:var(--red);">$${e.stop_stock_price || '—'}</div></div>
+        <div><div class="je-label">Contratos</div><div class="je-value" style="color:var(--blue);">${e.contracts || 1}</div></div>
+        ${e.realized_pnl ? `<div><div class="je-label">P&L</div><div class="je-value" style="color:${sc};">$${e.realized_pnl}</div></div>` : ''}
+        ${e.pnl_pct ? `<div><div class="je-label">ROI</div><div class="je-value" style="color:${sc};">${e.pnl_pct}%</div></div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function renderIntraday() {
+  const tbody = document.getElementById('intraday-tbody');
+  if (!tbody) return;
+
+  if (!openExecutions.length) {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--text-dim);font-family:var(--mono);font-size:11px;padding:20px;">Sin posiciones abiertas.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = openExecutions.map(e => `
+    <tr>
+      <td><div class="ticker">${e.ticker}</div></td>
+      <td style="font-size:10px;color:var(--text-dim);">${e.setup_type === 'tactical' ? '⚡ Táctico' : '📈 Swing'}</td>
+      <td><span style="font-family:var(--mono);font-size:12px;color:var(--text-mid);">—</span></td>
+      <td><span style="font-family:var(--mono);font-size:12px;color:var(--text-mid);">—</span></td>
+      <td><span class="badge badge-valid">VÁLIDO</span></td>
+      <td><span class="badge badge-wait">PENDIENTE</span></td>
+      <td><span class="badge badge-valid">OK</span></td>
+      <td><span class="badge badge-hold">HOLD</span></td>
+      <td style="font-size:11px;color:var(--text-dim);">Revisar en Webull · Stop: $${e.stop_stock_price || '—'}</td>
+    </tr>`).join('');
+}
+
+// ── CLOSE TRADE MODAL ────────────────────────────────────────
+function openCloseModal(executionId, ticker) {
+  document.getElementById('close-entry-id').value = executionId;
+  document.getElementById('close-modal').classList.add('open');
+  document.getElementById('close-exit').value = '';
+  document.getElementById('close-modal-title').textContent = `🔒 Cerrar Trade — ${ticker}`;
+}
+
+async function confirmCloseEntry() {
+  const id = document.getElementById('close-entry-id').value;
+  const exit = parseFloat(document.getElementById('close-exit').value);
+  const result = document.getElementById('close-result').value;
+  if (!exit) { showToast('⚠ Ingresa precio de salida'); return; }
+
+  const exec = openExecutions.find(e => e.execution_id === id);
+  const entryFill = parseFloat(exec?.entry_fill) || 0;
+  const contracts = parseInt(exec?.contracts) || 1;
+  const pnl = entryFill > 0 ? ((exit - entryFill) * 100 * contracts) : 0;
+  const pnlPct = entryFill > 0 ? (((exit - entryFill) / entryFill) * 100) : 0;
+
+  await LEMORA_DB.updateExecution(id, {
+    execution_status: result,
+    final_exit_fill: exit,
+    final_exit_datetime: new Date().toISOString(),
+    realized_pnl: pnl.toFixed(2),
+    pnl_pct: pnlPct.toFixed(1),
+    win_loss: result === 'closed_win' ? 'WIN' : result === 'closed_even' ? 'EVEN' : 'LOSS'
+  });
+
+  closeModal('close-modal');
+  showToast(`Trade cerrado ${result === 'closed_win' ? '✅' : '❌'} ${pnlPct.toFixed(1)}%`);
+  await loadOpenPositions();
+  await renderEntries();
+  await loadHistory();
+}
+
+// ── HISTORY ──────────────────────────────────────────────────
+async function loadHistory() {
+  const all = await LEMORA_DB.getAllExecutions();
+  const closed = all.filter(e => e.execution_status !== 'open' && e.execution_status !== 'cancelled');
+  const tbody = document.getElementById('history-tbody');
+  if (!tbody) return;
+
+  if (!closed.length) {
+    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--text-dim);font-size:11px;padding:20px;">Historial vacío</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = closed.map(h => {
+    const c = h.win_loss === 'WIN' ? 'var(--green)' : h.win_loss === 'EVEN' ? 'var(--yellow)' : 'var(--red)';
+    return `<tr>
+      <td style="font-size:11px;color:var(--text-dim);">${h.entry_datetime ? new Date(h.entry_datetime).toLocaleDateString() : '—'}</td>
+      <td><span class="ticker" style="font-size:13px;">${h.ticker}</span></td>
+      <td style="font-size:10px;color:var(--text-dim);">${h.direction || '—'}</td>
+      <td style="font-size:11px;">${h.preferred_dte_bucket || '—'}</td>
+      <td style="font-size:11px;">${h.structure || '—'}</td>
+      <td style="font-size:11px;color:var(--text-mid);">$${h.entry_fill || '—'}</td>
+      <td style="font-size:11px;">$${h.final_exit_fill || '—'}</td>
+      <td style="font-size:11px;color:var(--text-dim);">$${h.capital_used || '—'}</td>
+      <td style="font-size:12px;font-weight:700;color:${c};">$${h.realized_pnl || '—'}</td>
+      <td style="font-size:12px;color:${c};">${h.pnl_pct || '—'}%</td>
+      <td><span class="badge" style="background:${c}22;border:1px solid ${c};color:${c};font-size:10px;">${h.win_loss || '—'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── TRADING DAYS HISTORY ─────────────────────────────────────
+async function loadTradingDays() {
+  const days = await LEMORA_DB.getTradingDays(30);
+  const container = document.getElementById('days-history-container');
+  if (!container) return;
+
+  if (!days.length) {
+    container.innerHTML = `<div style="font-family:var(--mono);font-size:12px;color:var(--text-dim);text-align:center;padding:40px;">Sin días archivados aún.</div>`;
+    return;
+  }
+
+  container.innerHTML = days.map(day => {
+    const pnlColor = (day.total_pnl || 0) >= 0 ? 'var(--green)' : 'var(--red)';
+    return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <div style="font-family:var(--mono);font-size:14px;font-weight:700;">${day.trading_date}</div>
+        <div style="font-family:var(--mono);font-size:12px;color:var(--green);">✅ ${day.winning_trades || 0} WIN</div>
+        <div style="font-family:var(--mono);font-size:12px;color:var(--red);">❌ ${day.losing_trades || 0} LOSS</div>
+        <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:${pnlColor};">P&L: $${day.total_pnl || 0}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);">${day.regime || ''}</div>
+      </div>
+      ${day.notes ? `<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:8px;">📝 ${day.notes}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ── REGIME BADGE ─────────────────────────────────────────────
+function updateRegimeBadge(regime, confidence) {
+  const badge = document.getElementById('regime-badge-main');
+  if (!badge) return;
+  const label = `${regime || 'Selective Risk-On'} · ${confidence || 62}%`;
+  badge.childNodes[0].textContent = label + ' ℹ';
+
+  // Color by regime
+  if (regime?.includes('Risk-Off')) {
+    badge.style.borderColor = 'var(--red)';
+    badge.style.background = 'var(--red-dim)';
+    badge.style.color = 'var(--red)';
+  } else if (regime?.includes('Fragile') || regime?.includes('Cautious')) {
+    badge.style.borderColor = 'var(--orange)';
+    badge.style.background = 'rgba(255,109,0,.1)';
+    badge.style.color = 'var(--orange)';
+  } else if (regime?.includes('Broad')) {
+    badge.style.borderColor = 'var(--green)';
+    badge.style.background = 'var(--green-dim)';
+    badge.style.color = 'var(--green)';
+  } else {
+    badge.style.borderColor = 'var(--yellow)';
+    badge.style.background = 'var(--yellow-dim)';
+    badge.style.color = 'var(--yellow)';
+  }
+}
+
+function updatePortfolioSummary(report) {
+  const conf = document.getElementById('portfolio-confidence');
+  if (conf) conf.textContent = (report.confidence_pct || 62) + '%';
+}
+
+// ── UTILS ────────────────────────────────────────────────────
+function showLoading(show) {
+  const el = document.getElementById('loading-indicator');
+  if (el) el.style.display = show ? 'flex' : 'none';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function closeModal(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('open');
+}
+
+function togglePortfolio() {
+  const w = document.getElementById('port-wrapper');
+  const b = document.getElementById('port-btn');
+  if (!w) return;
+  const isVisible = w.style.maxHeight !== '0px' && w.style.maxHeight !== '';
+  if (isVisible) {
+    w.style.maxHeight = '0';
+    w.style.opacity = '0';
+    if (b) b.classList.remove('on');
+  } else {
+    w.style.maxHeight = '160px';
+    w.style.opacity = '1';
+    if (b) b.classList.add('on');
+  }
+}
+
+function toggleNews() {
+  const p = document.getElementById('news-panel');
+  const b = document.getElementById('news-btn');
+  if (!p) return;
+  const open = p.classList.toggle('open');
+  if (b) {
+    b.classList.toggle('open', open);
+    b.textContent = open ? '▲ Ocultar Noticias' : '▼ Ver Noticias';
+  }
+}
+
+function setView(v) {
+  const isExt = v === 'extended';
+  document.querySelectorAll('.extended-only').forEach(el => el.classList.toggle('visible', isExt));
+  const sb = document.getElementById('view-short-btn');
+  const eb = document.getElementById('view-ext-btn');
+  if (sb) sb.classList.toggle('on', v === 'short');
+  if (eb) eb.classList.toggle('on', v === 'extended');
+}
+
+function showTab(name, el) {
+  document.querySelectorAll('.page').forEach(x => x.classList.remove('visible'));
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  const page = document.getElementById('tab-' + name);
+  if (page) page.classList.add('visible');
+  if (el) el.classList.add('active');
+
+  // Load data for the tab
+  if (name === 'entries') renderEntries();
+  if (name === 'history') loadTradingDays();
+}
+
+// Start
+document.addEventListener('DOMContentLoaded', initDashboard);
+
+</script>
+
+<script>
+// Inline helpers that need DOM access
+function openReportModal(slot) {
+  const titles = {premarket:'Pre-Market',daily:'Daily',intraday:'Intraday Recheck',postclose:'Post-Close'};
+  document.getElementById('report-modal-title').textContent = '📄 Reporte — ' + titles[slot];
+  document.getElementById('report-modal').classList.add('open');
+}
+function saveReport() { closeModal('report-modal'); showToast('Función disponible próximamente'); }
+function saveMarketData() {
+  const data = {
+    spy: document.getElementById('p-spy').value,
+    qqq: document.getElementById('p-qqq').value,
+    vix: document.getElementById('p-vix').value,
+    nq: document.getElementById('p-nq').value
+  };
+  localStorage.setItem('lemora_market_prices', JSON.stringify(data));
+  showToast('Precios actualizados ✅');
+}
+function loadMarketPrices() {
+  const saved = JSON.parse(localStorage.getItem('lemora_market_prices') || '{}');
+  if (saved.spy) document.getElementById('p-spy').value = saved.spy;
+  if (saved.qqq) document.getElementById('p-qqq').value = saved.qqq;
+  if (saved.vix) document.getElementById('p-vix').value = saved.vix;
+  if (saved.nq) document.getElementById('p-nq').value = saved.nq;
+}
+window.addEventListener('load', loadMarketPrices);
+</script>
+</body>
+</html>
